@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicadores - Ranking de Turnos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root{
+      --rojo:#e10600;
+      --rojo-claro:#ffe5e3;
+      --verde:#008c4a;
+      --verde-claro:#e1f4e8;
+      --gris:#f4f4f4;
+      --texto:#222;
+      --borde:#bbbbbb;
+
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:#222;
+      color:var(--texto);
+    }
+
+    header{
+      background:var(--rojo);
+      color:#fff;
+      padding:10px 16px;
+      text-align:center;
+      text-transform:uppercase;
+      font-weight:700;
+      letter-spacing:0.05em;
+    }
+
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+    }
+
+    h2{
+      margin-top:0;
+      text-transform:uppercase;
+      font-size:1rem;
+      letter-spacing:0.05em;
+      color:var(--rojo);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0,1fr);
+      gap:16px;
+    }
+
+    @media (min-width: 900px){
+      .grid{
+        grid-template-columns: 1.1fr 1fr;
+      }
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--borde);
+      border-radius:6px;
+      padding:14px 16px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    label{
+      display:block;
+      font-size:0.8rem;
+      margin-bottom:4px;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+      color:#555;
+    }
+
+    select,
+    input[type="date"],
+    input[type="number"]{
+      width:100%;
+      padding:6px 8px;
+      border-radius:4px;
+      border:1px solid var(--borde);
+      font-size:0.9rem;
+    }
+
+    .fila-form{
+      display:grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:4px;
+      padding:8px 14px;
+      font-size:0.9rem;
+      cursor:pointer;
+      text-transform:uppercase;
+      letter-spacing:0.06em;
+      font-weight:600;
+    }
+
+    .btn-primario{
+      background:var(--rojo);
+      color:#fff;
+    }
+
+    .btn-primario:active{
+      transform:translateY(1px);
+    }
+
+    .msg{
+      font-size:0.8rem;
+      margin-top:6px;
+      min-height:1em;
+    }
+
+    .msg-ok{ color:var(--verde); }
+    .msg-err{ color:var(--rojo); }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.85rem;
+      margin-top:6px;
+    }
+
+    th, td{
+      border:1px solid var(--borde);
+      padding:4px 6px;
+      text-align:center;
+      white-space:nowrap;
+    }
+
+    th{
+      background:var(--gris);
+      text-transform:uppercase;
+      font-size:0.75rem;
+      letter-spacing:0.06em;
+    }
+
+    .tag-linea{
+      display:inline-block;
+      padding:1px 6px;
+      border-radius:999px;
+      font-size:0.7rem;
+      background:var(--gris);
+      text-transform:uppercase;
+    }
+
+    .rank-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      margin-bottom:4px;
+    }
+
+    .rank-title span{
+      font-size:0.75rem;
+      color:#888;
+    }
+
+    .row-best{
+      background:var(--verde-claro);
+    }
+
+    .row-worst{
+      background:var(--rojo-claro);
+    }
+
+    .empty{
+      font-size:0.8rem;
+      color:#888;
+      margin-top:6px;
+    }
+
+    .tabla-mini thead th{
+      position:sticky;
+      top:0;
+      background:#fafafa;
+    }
+
+    .scroll-x{
+      max-height:210px;
+      overflow:auto;
+      border:1px solid var(--borde);
+      border-radius:4px;
+    }
+
+    .btn-eliminar{
+  background:#e10600;
+  color:#fff;
+  border:none;
+  padding:2px 4px;   /* antes 4px 8px */
+  border-radius:3px; /* más pequeño y proporcional */
+  cursor:pointer;
+  font-size:0.6rem;  /* antes 0.75rem */
+}
+
+    .btn-eliminar:hover{
+      background:#b50000;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  INDICADORES · RANKING DE TURNOS
+</header>
+
+<main class="grid">
+
+  <!-- CARGA DE DATOS -->
+  <section class="card">
+    <h2>Carga diaria de eficiencia</h2>
+
+    <form id="formCarga">
+      <div class="fila-form">
+        <div>
+          <label for="linea">Línea</label>
+          <select id="linea" required>
+            <option value="1">Línea 1 (4 turnos)</option>
+            <option value="2">Línea 2 (3 turnos)</option>
+          </select>
+        </div>
+        <div>
+          <label for="turno">Turno</label>
+          <select id="turno" required>
+            <option value="A">Turno A</option>
+            <option value="B">Turno B</option>
+            <option value="C">Turno C</option>
+            <option value="D">Turno D (solo L1)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fila-form">
+        <div>
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" required>
+        </div>
+        <div>
+          <label for="eficiencia">% eficiencia</label>
+          <input type="number" id="eficiencia" min="0" max="150" step="0.01" required placeholder="ej: 85,3">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primario">Guardar</button>
+      <div id="msg" class="msg"></div>
+    </form>
+
+    <h3 style="margin-top:16px;font-size:0.9rem;">Últimas cargas</h3>
+    <div class="scroll-x">
+      <table class="tabla-mini">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Línea</th>
+            <th>Turno</th>
+            <th>% Efic.</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyUltimos">
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RANKINGS -->
+  <section class="card">
+    <h2>Ranking de turnos</h2>
+
+    <div class="rank-title">
+      <div class="tag-linea">Línea 1</div>
+      <span>Turnos A · B · C · D</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Turno</th>
+          <th>Promedio %</th>
+          <th>Cargas</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyRankL1"></tbody>
+    </table>
+    <div id="emptyL1" class="empty" style="display:none;">Sin datos aún para Línea 1.</div>
+
+    <hr style="margin:14px 0;border:none;border-top:1px solid var(--borde);">
+
+    <div class="rank-title">
+      <div class="tag-linea">Línea 2</div>
+      <span>Turnos A · B · C</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Turno</th>
+          <th>Promedio %</th>
+          <th>Cargas</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyRankL2"></tbody>
+    </table>
+    <div id="emptyL2" class="empty" style="display:none;">Sin datos aún para Línea 2.</div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+
+  <!-- Botón PDF -->
+  <button id="btnPDF" class="btn btn-primario">Generar PDF</button>
+
+  <!-- Logo alineado a la derecha y más grande -->
+  <img src="imagenes/Imagen2.png" 
+       alt="logo" 
+       style="height:90px; width:auto; transform:translateX(-10px);">
+</div>
+
+
+
+
+  </section>
+
+</main>
+<div id="pdfArea" style="position:absolute; left:-9999px; top:0; width:800px; padding:20px; background:#fff;">
+  <h2 style="text-align:center; margin-bottom:20px;">Informe de Indicadores – Ranking de Turnos</h2>
+  <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:20px; text-align:center;"></div>
+
+  <h3>Línea 1</h3>
+  <div id="pdfGrafL1"></div>
+  <br>
+
+  <h3>Línea 2</h3>
+  <div id="pdfGrafL2"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  // ===== Estado & persistencia =====
+  const LS_KEY = "indicadores_turnos_v1";
+
+  let registros = [];
+
+  function guardarEnLS(){
+    localStorage.setItem(LS_KEY, JSON.stringify(registros));
+  }
+
+  // MIGRACIÓN: aseguramos que todos los registros tengan id
+  function cargarDesdeLS(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw) || [];
+
+        registros = parsed.map(r => {
+          return {
+            id: r.id || `id_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            linea: Number(r.linea),
+            turno: r.turno,
+            fecha: r.fecha,
+            eficiencia: Number(r.eficiencia)
+          };
+        });
+
+        // guardamos nuevamente ya con los id generados
+        guardarEnLS();
+      }
+    }catch(e){
+      registros = [];
+    }
+  }
+
+  // ===== Utilidades =====
+  const $  = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+  function formatearFecha(iso){
+    if(!iso) return "";
+    const [a,m,d] = iso.split("-");
+    return `${d}/${m}/${a}`;
+  }
+
+  function formatearNumero(n){
+    if(isNaN(n)) return "-";
+    return n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
+  // ===== Eliminar registro =====
+  function eliminarRegistro(id){
+    if(!confirm("¿Eliminar este registro?")) return;
+
+    registros = registros.filter(r => String(r.id) !== String(id));
+    guardarEnLS();
+    renderUltimos();
+    renderRanking();
+  }
+
+  // ===== Render de últimas cargas =====
+  function renderUltimos(){
+    const tbody = $("#tbodyUltimos");
+    tbody.innerHTML = "";
+
+    const ultimos = [...registros].slice(-20).reverse(); // últimos 20
+
+    ultimos.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${formatearFecha(r.fecha)}</td>
+        <td>${r.linea}</td>
+        <td>${r.turno}</td>
+        <td>${formatearNumero(r.eficiencia)}%</td>
+        <td>
+          <button class="btn-eliminar" data-id="${r.id}">X</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if(ultimos.length === 0){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" style="color:#888;font-size:0.8rem;">Sin registros.</td>`;
+      tbody.appendChild(tr);
+    }
+
+    // Eventos de los botones
+    $$("#tbodyUltimos .btn-eliminar").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        eliminarRegistro(id);
+      });
+    });
+  }
+
+  // ===== Cálculo de ranking =====
+  function calcularRanking(linea){
+    const turnos = linea === 1 ? ["A","B","C","D"] : ["A","B","C"];
+
+    const datos = turnos.map(t => {
+      const filtrados = registros.filter(r => r.linea === linea && r.turno === t);
+      const cant = filtrados.length;
+      const prom = cant > 0
+        ? filtrados.reduce((acc,r)=> acc + Number(r.eficiencia || 0), 0) / cant
+        : null;
+      return { turno:t, cant, prom };
+    });
+
+    const conDatos = datos.filter(d => d.cant > 0 && d.prom !== null);
+    let mejor = null, peor = null;
+
+    if(conDatos.length > 0){
+      mejor = conDatos.reduce((a,b) => b.prom > a.prom ? b : a);
+      peor  = conDatos.reduce((a,b) => b.prom < a.prom ? b : a);
+    }
+
+    return { datos, mejorTurno: mejor?.turno || null, peorTurno: peor?.turno || null };
+  }
+
+  function renderRanking(){
+    // Línea 1
+    const rank1 = calcularRanking(1);
+    const tbody1 = $("#tbodyRankL1");
+    tbody1.innerHTML = "";
+
+    rank1.datos.forEach(d => {
+      const tr = document.createElement("tr");
+      if(d.turno === rank1.mejorTurno) tr.classList.add("row-best");
+      if(d.turno === rank1.peorTurno)  tr.classList.add("row-worst");
+
+      tr.innerHTML = `
+        <td>${d.turno}</td>
+        <td>${d.prom !== null ? formatearNumero(d.prom) + "%" : "-"}</td>
+        <td>${d.cant}</td>
+      `;
+      tbody1.appendChild(tr);
+    });
+
+    $("#emptyL1").style.display = rank1.mejorTurno === null ? "block" : "none";
+
+    // Línea 2
+    const rank2 = calcularRanking(2);
+    const tbody2 = $("#tbodyRankL2");
+    tbody2.innerHTML = "";
+
+    rank2.datos.forEach(d => {
+      const tr = document.createElement("tr");
+      if(d.turno === rank2.mejorTurno) tr.classList.add("row-best");
+      if(d.turno === rank2.peorTurno)  tr.classList.add("row-worst");
+
+      tr.innerHTML = `
+        <td>${d.turno}</td>
+        <td>${d.prom !== null ? formatearNumero(d.prom) + "%" : "-"}</td>
+        <td>${d.cant}</td>
+      `;
+      tbody2.appendChild(tr);
+    });
+
+    $("#emptyL2").style.display = rank2.mejorTurno === null ? "block" : "none";
+  }
+
+  // ===== Eventos de la UI =====
+  const selLinea = $("#linea");
+  const selTurno = $("#turno");
+  const inpFecha = $("#fecha");
+  const inpEf    = $("#eficiencia");
+  const frm      = $("#formCarga");
+  const msg      = $("#msg");
+
+  // fecha por defecto = hoy
+  (function setHoy(){
+    const ahora = new Date();
+    const off = new Date(ahora.getTime() - ahora.getTimezoneOffset()*60000);
+    inpFecha.value = off.toISOString().slice(0,10);
+  })();
+
+  // cuando cambia línea, habilitar / deshabilitar turno D
+  selLinea.addEventListener("change", () => {
+    const esL1 = selLinea.value === "1";
+    const optD = [...selTurno.options].find(o => o.value === "D");
+    if(optD){
+      optD.disabled = !esL1;
+      if(!esL1 && selTurno.value === "D"){
+        selTurno.value = "A";
+      }
+    }
+  });
+
+  frm.addEventListener("submit", e => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.className = "msg";
+
+    const linea = Number(selLinea.value);
+    const turno = selTurno.value;
+    const fecha = inpFecha.value;
+    const eficiencia = Number(String(inpEf.value).replace(",", "."));
+
+    if(!fecha || isNaN(eficiencia)){
+      msg.textContent = "Completá todos los datos.";
+      msg.classList.add("msg-err");
+      return;
+    }
+
+    registros.push({
+      id: `id_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      linea,
+      turno,
+      fecha,
+      eficiencia
+    });
+
+    guardarEnLS();
+    renderUltimos();
+    renderRanking();
+
+    msg.textContent = "Registro guardado.";
+    msg.classList.add("msg-ok");
+    inpEf.value = "";
+    inpEf.focus();
+  });
+function generarGrafico(datos, contenedorId){
+  const cont = document.getElementById(contenedorId);
+  cont.innerHTML = "";
+
+  datos.forEach(d => {
+    const wrapper = document.createElement("div");
+    wrapper.style.marginBottom = "6px";
+
+    const label = document.createElement("div");
+    label.textContent = `Turno ${d.turno} – ${formatearNumero(d.prom)}%`;
+
+    const bar = document.createElement("div");
+    bar.style.height = "18px";
+    bar.style.width = d.prom + "%";
+    bar.style.borderRadius = "3px";
+
+    // Color según eficiencia
+    let color = "#e10600"; // rojo
+    if(d.prom >= 90) color = "#008c4a";
+    else if(d.prom >= 80) color = "#ff9f2d";
+
+    bar.style.background = color;
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(bar);
+    cont.appendChild(wrapper);
+  });
+}
+async function generarPDF(){
+  const fecha = new Date().toLocaleString("es-AR");
+  document.getElementById("pdfFecha").textContent = "Generado el " + fecha;
+
+  // L1
+  const rank1 = calcularRanking(1);
+  const datos1 = rank1.datos.filter(d => d.prom !== null);
+  generarGrafico(datos1, "pdfGrafL1");
+
+  // L2
+  const rank2 = calcularRanking(2);
+  const datos2 = rank2.datos.filter(d => d.prom !== null);
+  generarGrafico(datos2, "pdfGrafL2");
+
+  // Captura del área como imagen
+  const elemento = document.getElementById("pdfArea");
+  const canvas = await html2canvas(elemento);
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new jspdf.jsPDF("p", "mm", "a4");
+  const width = pdf.internal.pageSize.getWidth();
+  const height = canvas.height * (width / canvas.width);
+
+  pdf.addImage(imgData, "PNG", 0, 0, width, height);
+  pdf.save("indicadores-ranking.pdf");
+}
+document.getElementById("btnPDF").addEventListener("click", generarPDF);
+
+  // ===== Init =====
+  cargarDesdeLS();
+  renderUltimos();
+  renderRanking();
+</script>
+
+</body>
+</html>
