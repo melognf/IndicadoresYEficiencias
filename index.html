@@ -14,7 +14,6 @@
       --gris:#f4f4f4;
       --texto:#222;
       --borde:#bbbbbb;
-
     }
 
     *{ box-sizing:border-box; }
@@ -168,13 +167,8 @@
       color:#888;
     }
 
-    .row-best{
-      background:var(--verde-claro);
-    }
-
-    .row-worst{
-      background:var(--rojo-claro);
-    }
+    .row-best{ background:var(--verde-claro); }
+    .row-worst{ background:var(--rojo-claro); }
 
     .empty{
       font-size:0.8rem;
@@ -196,17 +190,40 @@
     }
 
     .btn-eliminar{
-  background:#e10600;
-  color:#fff;
-  border:none;
-  padding:2px 4px;   /* antes 4px 8px */
-  border-radius:3px; /* más pequeño y proporcional */
-  cursor:pointer;
-  font-size:0.6rem;  /* antes 0.75rem */
-}
+      background:#e10600;
+      color:#fff;
+      border:none;
+      padding:2px 4px;
+      border-radius:3px;
+      cursor:pointer;
+      font-size:0.6rem;
+    }
+    .btn-eliminar:hover{ background:#b50000; }
 
-    .btn-eliminar:hover{
-      background:#b50000;
+    /* Barra “Últimas cargas” */
+    .ultimos-top{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:10px;
+      margin-bottom:6px;
+      flex-wrap:wrap;
+    }
+    .ultimos-top .left{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .ultimos-top .stats{
+      font-size:0.75rem;
+      color:#666;
+    }
+    .sel-mini{
+      width:auto;
+      padding:4px 8px;
+      font-size:0.85rem;
     }
   </style>
 </head>
@@ -257,7 +274,23 @@
       <div id="msg" class="msg"></div>
     </form>
 
-    <h3 style="margin-top:16px;font-size:0.9rem;">Últimas cargas</h3>
+    <!-- Últimas cargas: barra con selector y contador -->
+    <div class="ultimos-top">
+      <div class="left">
+        <h3 style="margin:0;font-size:0.9rem;">Últimas cargas</h3>
+
+        <label for="verUltimos" style="margin:0;font-size:0.7rem;color:#666;">Ver</label>
+        <select id="verUltimos" class="sel-mini" title="Cantidad de registros a mostrar">
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Todos</option>
+        </select>
+      </div>
+
+      <div id="statsUltimos" class="stats"></div>
+    </div>
+
     <div class="scroll-x">
       <table class="tabla-mini">
         <thead>
@@ -269,8 +302,7 @@
             <th>Acción</th>
           </tr>
         </thead>
-        <tbody id="tbodyUltimos">
-        </tbody>
+        <tbody id="tbodyUltimos"></tbody>
       </table>
     </div>
   </section>
@@ -312,24 +344,18 @@
       <tbody id="tbodyRankL2"></tbody>
     </table>
     <div id="emptyL2" class="empty" style="display:none;">Sin datos aún para Línea 2.</div>
-    
+
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+      <button id="btnPDF" class="btn btn-primario">Generar PDF</button>
 
-  <!-- Botón PDF -->
-  <button id="btnPDF" class="btn btn-primario">Generar PDF</button>
-
-  <!-- Logo alineado a la derecha y más grande -->
-  <img src="imagenes/Imagen2.png" 
-       alt="logo" 
-       style="height:90px; width:auto; transform:translateX(-10px);">
-</div>
-
-
-
-
+      <img src="imagenes/Imagen2.png"
+           alt="logo"
+           style="height:90px; width:auto; transform:translateX(-10px);">
+    </div>
   </section>
 
 </main>
+
 <div id="pdfArea" style="position:absolute; left:-9999px; top:0; width:800px; padding:20px; background:#fff;">
   <h2 style="text-align:center; margin-bottom:20px;">Informe de Indicadores – Ranking de Turnos</h2>
   <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:20px; text-align:center;"></div>
@@ -348,7 +374,6 @@
 <script>
   // ===== Estado & persistencia =====
   const LS_KEY = "indicadores_turnos_v1";
-
   let registros = [];
 
   function guardarEnLS(){
@@ -361,18 +386,13 @@
       const raw = localStorage.getItem(LS_KEY);
       if(raw){
         const parsed = JSON.parse(raw) || [];
-
-        registros = parsed.map(r => {
-          return {
-            id: r.id || `id_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-            linea: Number(r.linea),
-            turno: r.turno,
-            fecha: r.fecha,
-            eficiencia: Number(r.eficiencia)
-          };
-        });
-
-        // guardamos nuevamente ya con los id generados
+        registros = parsed.map(r => ({
+          id: r.id || (crypto?.randomUUID ? crypto.randomUUID() : `id_${Date.now()}_${Math.random().toString(16).slice(2)}`),
+          linea: Number(r.linea),
+          turno: r.turno,
+          fecha: r.fecha,
+          eficiencia: Number(r.eficiencia)
+        }));
         guardarEnLS();
       }
     }catch(e){
@@ -395,10 +415,28 @@
     return n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
   }
 
+  // ===== Últimas cargas: selector + stats =====
+  const selVerUltimos = () => $("#verUltimos");
+  const statsUltimos  = () => $("#statsUltimos");
+
+  function getLimiteVista(){
+    const v = selVerUltimos().value;
+    if(v === "all") return Infinity;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 20;
+  }
+
+  function actualizarStatsUltimos(mostrados){
+    const total = registros.length;
+    const txt = total === 0
+      ? "Sin registros guardados"
+      : `Mostrando ${mostrados} de ${total} guardados`;
+    statsUltimos().textContent = txt;
+  }
+
   // ===== Eliminar registro =====
   function eliminarRegistro(id){
     if(!confirm("¿Eliminar este registro?")) return;
-
     registros = registros.filter(r => String(r.id) !== String(id));
     guardarEnLS();
     renderUltimos();
@@ -410,7 +448,10 @@
     const tbody = $("#tbodyUltimos");
     tbody.innerHTML = "";
 
-    const ultimos = [...registros].slice(-20).reverse(); // últimos 20
+    const limite = getLimiteVista();
+    const ultimos = limite === Infinity
+      ? [...registros].slice().reverse()
+      : [...registros].slice(-limite).reverse();
 
     ultimos.forEach(r => {
       const tr = document.createElement("tr");
@@ -419,9 +460,7 @@
         <td>${r.linea}</td>
         <td>${r.turno}</td>
         <td>${formatearNumero(r.eficiencia)}%</td>
-        <td>
-          <button class="btn-eliminar" data-id="${r.id}">X</button>
-        </td>
+        <td><button class="btn-eliminar" data-id="${r.id}">X</button></td>
       `;
       tbody.appendChild(tr);
     });
@@ -432,12 +471,11 @@
       tbody.appendChild(tr);
     }
 
+    actualizarStatsUltimos(ultimos.length);
+
     // Eventos de los botones
     $$("#tbodyUltimos .btn-eliminar").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        eliminarRegistro(id);
-      });
+      btn.addEventListener("click", () => eliminarRegistro(btn.dataset.id));
     });
   }
 
@@ -534,6 +572,9 @@
     }
   });
 
+  // selector de “ver últimos”
+  $("#verUltimos").addEventListener("change", () => renderUltimos());
+
   frm.addEventListener("submit", e => {
     e.preventDefault();
     msg.textContent = "";
@@ -551,7 +592,7 @@
     }
 
     registros.push({
-      id: `id_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      id: (crypto?.randomUUID ? crypto.randomUUID() : `id_${Date.now()}_${Math.random().toString(16).slice(2)}`),
       linea,
       turno,
       fecha,
@@ -567,61 +608,57 @@
     inpEf.value = "";
     inpEf.focus();
   });
-function generarGrafico(datos, contenedorId){
-  const cont = document.getElementById(contenedorId);
-  cont.innerHTML = "";
 
-  datos.forEach(d => {
-    const wrapper = document.createElement("div");
-    wrapper.style.marginBottom = "6px";
+  function generarGrafico(datos, contenedorId){
+    const cont = document.getElementById(contenedorId);
+    cont.innerHTML = "";
 
-    const label = document.createElement("div");
-    label.textContent = `Turno ${d.turno} – ${formatearNumero(d.prom)}%`;
+    datos.forEach(d => {
+      const wrapper = document.createElement("div");
+      wrapper.style.marginBottom = "6px";
 
-    const bar = document.createElement("div");
-    bar.style.height = "18px";
-    bar.style.width = d.prom + "%";
-    bar.style.borderRadius = "3px";
+      const label = document.createElement("div");
+      label.textContent = `Turno ${d.turno} – ${formatearNumero(d.prom)}%`;
 
-    // Color según eficiencia
-    let color = "#e10600"; // rojo
-    if(d.prom >= 90) color = "#008c4a";
-    else if(d.prom >= 80) color = "#ff9f2d";
+      const bar = document.createElement("div");
+      bar.style.height = "18px";
+      bar.style.width = d.prom + "%";
+      bar.style.borderRadius = "3px";
 
-    bar.style.background = color;
+      let color = "#e10600";
+      if(d.prom >= 90) color = "#008c4a";
+      else if(d.prom >= 80) color = "#ff9f2d";
 
-    wrapper.appendChild(label);
-    wrapper.appendChild(bar);
-    cont.appendChild(wrapper);
-  });
-}
-async function generarPDF(){
-  const fecha = new Date().toLocaleString("es-AR");
-  document.getElementById("pdfFecha").textContent = "Generado el " + fecha;
+      bar.style.background = color;
 
-  // L1
-  const rank1 = calcularRanking(1);
-  const datos1 = rank1.datos.filter(d => d.prom !== null);
-  generarGrafico(datos1, "pdfGrafL1");
+      wrapper.appendChild(label);
+      wrapper.appendChild(bar);
+      cont.appendChild(wrapper);
+    });
+  }
 
-  // L2
-  const rank2 = calcularRanking(2);
-  const datos2 = rank2.datos.filter(d => d.prom !== null);
-  generarGrafico(datos2, "pdfGrafL2");
+  async function generarPDF(){
+    const fecha = new Date().toLocaleString("es-AR");
+    document.getElementById("pdfFecha").textContent = "Generado el " + fecha;
 
-  // Captura del área como imagen
-  const elemento = document.getElementById("pdfArea");
-  const canvas = await html2canvas(elemento);
-  const imgData = canvas.toDataURL("image/png");
+    const rank1 = calcularRanking(1);
+    generarGrafico(rank1.datos.filter(d => d.prom !== null), "pdfGrafL1");
 
-  const pdf = new jspdf.jsPDF("p", "mm", "a4");
-  const width = pdf.internal.pageSize.getWidth();
-  const height = canvas.height * (width / canvas.width);
+    const rank2 = calcularRanking(2);
+    generarGrafico(rank2.datos.filter(d => d.prom !== null), "pdfGrafL2");
 
-  pdf.addImage(imgData, "PNG", 0, 0, width, height);
-  pdf.save("indicadores-ranking.pdf");
-}
-document.getElementById("btnPDF").addEventListener("click", generarPDF);
+    const elemento = document.getElementById("pdfArea");
+    const canvas = await html2canvas(elemento);
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jspdf.jsPDF("p", "mm", "a4");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = canvas.height * (width / canvas.width);
+
+    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+    pdf.save("indicadores-ranking.pdf");
+  }
+  document.getElementById("btnPDF").addEventListener("click", generarPDF);
 
   // ===== Init =====
   cargarDesdeLS();
