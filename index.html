@@ -356,20 +356,27 @@
 
 </main>
 
+<!-- PDF offscreen -->
 <div id="pdfArea" style="position:absolute; left:-9999px; top:0; width:800px; padding:20px; background:#fff;">
-  <h2 style="text-align:center; margin-bottom:20px;">Informe de Indicadores – Ranking de Turnos</h2>
-  <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:20px; text-align:center;"></div>
+  <h2 style="text-align:center; margin-bottom:10px;">Informe de Indicadores – Eficiencia por Turno</h2>
+  <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:14px; text-align:center;"></div>
 
-  <h3>Línea 1</h3>
-  <div id="pdfGrafL1"></div>
-  <br>
+  <div id="pdfCardL1" style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:14px;">
+    <h3 style="margin:0 0 6px 0;">Línea 1 – Turnos A, B, C, D</h3>
+    <div style="font-size:0.8rem;color:#666;margin-bottom:8px;">Evolución diaria de eficiencia (%)</div>
+    <canvas id="chartL1" width="760" height="260"></canvas>
+  </div>
 
-  <h3>Línea 2</h3>
-  <div id="pdfGrafL2"></div>
+  <div id="pdfCardL2" style="border:1px solid #ddd; border-radius:8px; padding:12px;">
+    <h3 style="margin:0 0 6px 0;">Línea 2 – Turnos A, B, C</h3>
+    <div style="font-size:0.8rem;color:#666;margin-bottom:8px;">Evolución diaria de eficiencia (%)</div>
+    <canvas id="chartL2" width="760" height="260"></canvas>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
   // ===== Estado & persistencia =====
@@ -413,6 +420,135 @@
   function formatearNumero(n){
     if(isNaN(n)) return "-";
     return n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
+  // ===== Helpers para gráficos PDF (líneas por turno) =====
+  let _chartPdfL1 = null;
+  let _chartPdfL2 = null;
+
+  function etiquetasFechas(fechaISO){
+    if(!fechaISO) return "";
+    const [y,m,d] = String(fechaISO).split("-");
+    return `${d}/${m}`;
+  }
+
+  // IMPORTANTe: funciones para generar rango completo día-a-día
+  function isoToLocalDate(iso){
+    const [y,m,d] = String(iso).split("-").map(Number);
+    return new Date(y, m-1, d); // local
+  }
+  function localDateToISO(dt){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,"0");
+    const d = String(dt.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+  function generarRangoDiasISO(minISO, maxISO){
+    const out = [];
+    let cur = isoToLocalDate(minISO);
+    const end = isoToLocalDate(maxISO);
+    cur.setHours(0,0,0,0);
+    end.setHours(0,0,0,0);
+
+    while(cur <= end){
+      out.push(localDateToISO(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+  }
+
+  function prepararSeriesPorLinea(linea){
+    const turnos = linea === 1 ? ["A","B","C","D"] : ["A","B","C"];
+    const regs = registros
+      .filter(r => r.linea === linea && r.fecha)
+      .map(r => ({ ...r, fecha: String(r.fecha) }));
+
+    // Si no hay datos, devolvemos estructuras vacías
+    if(regs.length === 0){
+      return {
+        fechas: [],
+        series: turnos.map(t => ({ turno:t, data: [] })),
+        turnos
+      };
+    }
+
+    // min/max fecha (ISO se ordena bien como string)
+    const fechasExistentes = regs.map(r => r.fecha).sort();
+    const minF = fechasExistentes[0];
+    const maxF = fechasExistentes[fechasExistentes.length - 1];
+
+    // rango completo día a día
+    const fechas = generarRangoDiasISO(minF, maxF);
+
+    // Para cada turno: map fecha -> eficiencia (si hay duplicados mismo día, promedia)
+    const series = turnos.map(turno => {
+      const porFecha = new Map(); // fecha -> {sum, count}
+
+      regs.filter(r => r.turno === turno).forEach(r => {
+        const f = r.fecha;
+        const e = Number(r.eficiencia);
+        if(!Number.isFinite(e)) return;
+        if(!porFecha.has(f)) porFecha.set(f, { sum:0, count:0 });
+        const obj = porFecha.get(f);
+        obj.sum += e;
+        obj.count += 1;
+      });
+
+      const data = fechas.map(f => {
+        const v = porFecha.get(f);
+        return v ? (v.sum / v.count) : null;
+      });
+
+      return { turno, data };
+    });
+
+    return { fechas, series, turnos };
+  }
+
+  function crearLineChart(canvasId, titulo, linea){
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext("2d");
+    const { fechas, series } = prepararSeriesPorLinea(linea);
+
+    const labels = fechas.map(etiquetasFechas);
+
+    const datasets = series.map(s => ({
+      label: `Turno ${s.turno}`,
+      data: s.data,
+      spanGaps: true,
+      borderWidth: 2,
+      pointRadius: 2,
+      pointHoverRadius: 3,
+      tension: 0.25
+    }));
+
+    return new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: false,
+        animation: false,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: "top" },
+          title: { display: false, text: titulo }
+        },
+        scales: {
+          y: {
+            title: { display: true, text: "Eficiencia (%)" },
+            beginAtZero: false
+          },
+          x: {
+            title: { display: true, text: "Fecha" }
+          }
+        }
+      }
+    });
+  }
+
+  function destruirChartsPDF(){
+    try{ if(_chartPdfL1){ _chartPdfL1.destroy(); _chartPdfL1 = null; } }catch(e){}
+    try{ if(_chartPdfL2){ _chartPdfL2.destroy(); _chartPdfL2 = null; } }catch(e){}
   }
 
   // ===== Últimas cargas: selector + stats =====
@@ -473,7 +609,6 @@
 
     actualizarStatsUltimos(ultimos.length);
 
-    // Eventos de los botones
     $$("#tbodyUltimos .btn-eliminar").forEach(btn => {
       btn.addEventListener("click", () => eliminarRegistro(btn.dataset.id));
     });
@@ -609,55 +744,40 @@
     inpEf.focus();
   });
 
-  function generarGrafico(datos, contenedorId){
-    const cont = document.getElementById(contenedorId);
-    cont.innerHTML = "";
-
-    datos.forEach(d => {
-      const wrapper = document.createElement("div");
-      wrapper.style.marginBottom = "6px";
-
-      const label = document.createElement("div");
-      label.textContent = `Turno ${d.turno} – ${formatearNumero(d.prom)}%`;
-
-      const bar = document.createElement("div");
-      bar.style.height = "18px";
-      bar.style.width = d.prom + "%";
-      bar.style.borderRadius = "3px";
-
-      let color = "#e10600";
-      if(d.prom >= 90) color = "#008c4a";
-      else if(d.prom >= 80) color = "#ff9f2d";
-
-      bar.style.background = color;
-
-      wrapper.appendChild(label);
-      wrapper.appendChild(bar);
-      cont.appendChild(wrapper);
-    });
-  }
-
   async function generarPDF(){
     const fecha = new Date().toLocaleString("es-AR");
     document.getElementById("pdfFecha").textContent = "Generado el " + fecha;
 
-    const rank1 = calcularRanking(1);
-    generarGrafico(rank1.datos.filter(d => d.prom !== null), "pdfGrafL1");
+    destruirChartsPDF();
 
-    const rank2 = calcularRanking(2);
-    generarGrafico(rank2.datos.filter(d => d.prom !== null), "pdfGrafL2");
+    _chartPdfL1 = crearLineChart("chartL1", "Línea 1", 1);
+    _chartPdfL2 = crearLineChart("chartL2", "Línea 2", 2);
 
-    const elemento = document.getElementById("pdfArea");
-    const canvas = await html2canvas(elemento);
-    const imgData = canvas.toDataURL("image/png");
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     const pdf = new jspdf.jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = canvas.height * (width / canvas.width);
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
 
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save("indicadores-ranking.pdf");
+    async function addCardToPdf(cardId, isFirst){
+      const el = document.getElementById(cardId);
+      const canvas = await html2canvas(el, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const margin = 10; // mm
+      const usableW = pageW - margin*2;
+      const imgH = canvas.height * (usableW / canvas.width);
+
+      if(!isFirst) pdf.addPage();
+      pdf.addImage(imgData, "PNG", margin, margin, usableW, imgH);
+    }
+
+    await addCardToPdf("pdfCardL1", true);
+    await addCardToPdf("pdfCardL2", false);
+
+    pdf.save("indicadores-evolucion-por-turno.pdf");
   }
+
   document.getElementById("btnPDF").addEventListener("click", generarPDF);
 
   // ===== Init =====
