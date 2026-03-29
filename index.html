@@ -95,6 +95,14 @@
       margin-bottom:10px;
     }
 
+    .acciones-form{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:4px;
+    }
+
     .btn{
       border:none;
       border-radius:4px;
@@ -111,7 +119,13 @@
       color:#fff;
     }
 
-    .btn-primario:active{
+    .btn-secundario{
+      background:#666;
+      color:#fff;
+    }
+
+    .btn-primario:active,
+    .btn-secundario:active{
       transform:translateY(1px);
     }
 
@@ -200,7 +214,6 @@
     }
     .btn-eliminar:hover{ background:#b50000; }
 
-    /* Barra “Últimas cargas” */
     .ultimos-top{
       display:flex;
       gap:10px;
@@ -235,7 +248,6 @@
 
 <main class="grid">
 
-  <!-- CARGA DE DATOS -->
   <section class="card">
     <h2>Carga diaria de eficiencia</h2>
 
@@ -245,7 +257,7 @@
           <label for="linea">Línea</label>
           <select id="linea" required>
             <option value="1">Línea 1 (4 turnos)</option>
-            <option value="2">Línea 2 (3 turnos)</option>
+            <option value="2">Línea 2 (4 turnos)</option>
           </select>
         </div>
         <div>
@@ -254,7 +266,7 @@
             <option value="A">Turno A</option>
             <option value="B">Turno B</option>
             <option value="C">Turno C</option>
-            <option value="D">Turno D (solo L1)</option>
+            <option value="D">Turno D</option>
           </select>
         </div>
       </div>
@@ -270,11 +282,14 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primario">Guardar</button>
+      <div class="acciones-form">
+        <button type="submit" class="btn btn-primario">Guardar</button>
+        <button type="button" id="btnResetTodo" class="btn btn-secundario">Reiniciar todo</button>
+      </div>
+
       <div id="msg" class="msg"></div>
     </form>
 
-    <!-- Últimas cargas: barra con selector y contador -->
     <div class="ultimos-top">
       <div class="left">
         <h3 style="margin:0;font-size:0.9rem;">Últimas cargas</h3>
@@ -307,7 +322,6 @@
     </div>
   </section>
 
-  <!-- RANKINGS -->
   <section class="card">
     <h2>Ranking de turnos</h2>
 
@@ -331,7 +345,7 @@
 
     <div class="rank-title">
       <div class="tag-linea">Línea 2</div>
-      <span>Turnos A · B · C</span>
+      <span>Turnos A · B · C · D</span>
     </div>
     <table>
       <thead>
@@ -356,7 +370,6 @@
 
 </main>
 
-<!-- PDF offscreen -->
 <div id="pdfArea" style="position:absolute; left:-9999px; top:0; width:800px; padding:20px; background:#fff;">
   <h2 style="text-align:center; margin-bottom:10px;">Informe de Indicadores – Eficiencia por Turno</h2>
   <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:14px; text-align:center;"></div>
@@ -368,7 +381,7 @@
   </div>
 
   <div id="pdfCardL2" style="border:1px solid #ddd; border-radius:8px; padding:12px;">
-    <h3 style="margin:0 0 6px 0;">Línea 2 – Turnos A, B, C</h3>
+    <h3 style="margin:0 0 6px 0;">Línea 2 – Turnos A, B, C, D</h3>
     <div style="font-size:0.8rem;color:#666;margin-bottom:8px;">Evolución diaria de eficiencia (%)</div>
     <canvas id="chartL2" width="760" height="260"></canvas>
   </div>
@@ -379,7 +392,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
-  // ===== Estado & persistencia =====
   const LS_KEY = "indicadores_turnos_v1";
   let registros = [];
 
@@ -387,7 +399,6 @@
     localStorage.setItem(LS_KEY, JSON.stringify(registros));
   }
 
-  // MIGRACIÓN: aseguramos que todos los registros tengan id
   function cargarDesdeLS(){
     try{
       const raw = localStorage.getItem(LS_KEY);
@@ -407,7 +418,6 @@
     }
   }
 
-  // ===== Utilidades =====
   const $  = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
@@ -422,7 +432,6 @@
     return n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
   }
 
-  // ===== Helpers para gráficos PDF (líneas por turno) =====
   let _chartPdfL1 = null;
   let _chartPdfL2 = null;
 
@@ -432,17 +441,18 @@
     return `${d}/${m}`;
   }
 
-  // IMPORTANTe: funciones para generar rango completo día-a-día
   function isoToLocalDate(iso){
     const [y,m,d] = String(iso).split("-").map(Number);
-    return new Date(y, m-1, d); // local
+    return new Date(y, m-1, d);
   }
+
   function localDateToISO(dt){
     const y = dt.getFullYear();
     const m = String(dt.getMonth()+1).padStart(2,"0");
     const d = String(dt.getDate()).padStart(2,"0");
     return `${y}-${m}-${d}`;
   }
+
   function generarRangoDiasISO(minISO, maxISO){
     const out = [];
     let cur = isoToLocalDate(minISO);
@@ -457,13 +467,16 @@
     return out;
   }
 
+  function obtenerTurnosPorLinea(){
+    return ["A","B","C","D"];
+  }
+
   function prepararSeriesPorLinea(linea){
-    const turnos = linea === 1 ? ["A","B","C","D"] : ["A","B","C"];
+    const turnos = obtenerTurnosPorLinea();
     const regs = registros
       .filter(r => r.linea === linea && r.fecha)
       .map(r => ({ ...r, fecha: String(r.fecha) }));
 
-    // Si no hay datos, devolvemos estructuras vacías
     if(regs.length === 0){
       return {
         fechas: [],
@@ -472,22 +485,19 @@
       };
     }
 
-    // min/max fecha (ISO se ordena bien como string)
     const fechasExistentes = regs.map(r => r.fecha).sort();
     const minF = fechasExistentes[0];
     const maxF = fechasExistentes[fechasExistentes.length - 1];
-
-    // rango completo día a día
     const fechas = generarRangoDiasISO(minF, maxF);
 
-    // Para cada turno: map fecha -> eficiencia (si hay duplicados mismo día, promedia)
     const series = turnos.map(turno => {
-      const porFecha = new Map(); // fecha -> {sum, count}
+      const porFecha = new Map();
 
       regs.filter(r => r.turno === turno).forEach(r => {
         const f = r.fecha;
         const e = Number(r.eficiencia);
         if(!Number.isFinite(e)) return;
+
         if(!porFecha.has(f)) porFecha.set(f, { sum:0, count:0 });
         const obj = porFecha.get(f);
         obj.sum += e;
@@ -551,7 +561,6 @@
     try{ if(_chartPdfL2){ _chartPdfL2.destroy(); _chartPdfL2 = null; } }catch(e){}
   }
 
-  // ===== Últimas cargas: selector + stats =====
   const selVerUltimos = () => $("#verUltimos");
   const statsUltimos  = () => $("#statsUltimos");
 
@@ -570,7 +579,6 @@
     statsUltimos().textContent = txt;
   }
 
-  // ===== Eliminar registro =====
   function eliminarRegistro(id){
     if(!confirm("¿Eliminar este registro?")) return;
     registros = registros.filter(r => String(r.id) !== String(id));
@@ -579,7 +587,20 @@
     renderRanking();
   }
 
-  // ===== Render de últimas cargas =====
+  function reiniciarTodo(){
+    const ok = confirm("¿Seguro que querés reiniciar todo? Se van a borrar todos los registros guardados.");
+    if(!ok) return;
+
+    registros = [];
+    localStorage.removeItem(LS_KEY);
+
+    renderUltimos();
+    renderRanking();
+
+    msg.textContent = "Se borraron todos los registros.";
+    msg.className = "msg msg-ok";
+  }
+
   function renderUltimos(){
     const tbody = $("#tbodyUltimos");
     tbody.innerHTML = "";
@@ -614,9 +635,8 @@
     });
   }
 
-  // ===== Cálculo de ranking =====
   function calcularRanking(linea){
-    const turnos = linea === 1 ? ["A","B","C","D"] : ["A","B","C"];
+    const turnos = obtenerTurnosPorLinea();
 
     const datos = turnos.map(t => {
       const filtrados = registros.filter(r => r.linea === linea && r.turno === t);
@@ -639,7 +659,6 @@
   }
 
   function renderRanking(){
-    // Línea 1
     const rank1 = calcularRanking(1);
     const tbody1 = $("#tbodyRankL1");
     tbody1.innerHTML = "";
@@ -659,7 +678,6 @@
 
     $("#emptyL1").style.display = rank1.mejorTurno === null ? "block" : "none";
 
-    // Línea 2
     const rank2 = calcularRanking(2);
     const tbody2 = $("#tbodyRankL2");
     tbody2.innerHTML = "";
@@ -680,7 +698,6 @@
     $("#emptyL2").style.display = rank2.mejorTurno === null ? "block" : "none";
   }
 
-  // ===== Eventos de la UI =====
   const selLinea = $("#linea");
   const selTurno = $("#turno");
   const inpFecha = $("#fecha");
@@ -688,27 +705,14 @@
   const frm      = $("#formCarga");
   const msg      = $("#msg");
 
-  // fecha por defecto = hoy
   (function setHoy(){
     const ahora = new Date();
     const off = new Date(ahora.getTime() - ahora.getTimezoneOffset()*60000);
     inpFecha.value = off.toISOString().slice(0,10);
   })();
 
-  // cuando cambia línea, habilitar / deshabilitar turno D
-  selLinea.addEventListener("change", () => {
-    const esL1 = selLinea.value === "1";
-    const optD = [...selTurno.options].find(o => o.value === "D");
-    if(optD){
-      optD.disabled = !esL1;
-      if(!esL1 && selTurno.value === "D"){
-        selTurno.value = "A";
-      }
-    }
-  });
-
-  // selector de “ver últimos”
   $("#verUltimos").addEventListener("change", () => renderUltimos());
+  $("#btnResetTodo").addEventListener("click", reiniciarTodo);
 
   frm.addEventListener("submit", e => {
     e.preventDefault();
@@ -757,14 +761,13 @@
 
     const pdf = new jspdf.jsPDF("p", "mm", "a4");
     const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
 
     async function addCardToPdf(cardId, isFirst){
       const el = document.getElementById(cardId);
       const canvas = await html2canvas(el, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
 
-      const margin = 10; // mm
+      const margin = 10;
       const usableW = pageW - margin*2;
       const imgH = canvas.height * (usableW / canvas.width);
 
@@ -780,7 +783,6 @@
 
   document.getElementById("btnPDF").addEventListener("click", generarPDF);
 
-  // ===== Init =====
   cargarDesdeLS();
   renderUltimos();
   renderRanking();
