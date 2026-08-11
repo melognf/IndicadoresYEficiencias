@@ -4,95 +4,220 @@
   <meta charset="UTF-8">
   <title>Indicadores - Ranking de Turnos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --rojo:#e10600;
-      --rojo-claro:#ffe5e3;
-      --verde:#008c4a;
-      --verde-claro:#e1f4e8;
-      --gris:#f4f4f4;
-      --texto:#222;
-      --borde:#bbbbbb;
+      --rojo:#e2001a;
+      --rojo-oscuro:#a80013;
+      --rojo-claro:#fdeaec;
+      --verde:#0f9d58;
+      --verde-claro:#e6f7ee;
+      --tinta:#15181c;
+      --tinta-suave:#5b6270;
+      --superficie:#ffffff;
+      --superficie-alt:#f5f6f8;
+      --borde:#e3e5ea;
+      --borde-fuerte:#c6cad2;
+      --radio-lg:16px;
+      --radio-md:10px;
+      --radio-sm:7px;
+      --sombra-sm:0 1px 2px rgba(15,23,42,.06);
+      --sombra-md:0 10px 26px -12px rgba(15,23,42,.28);
+      --sombra-card:0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.04);
     }
 
     *{ box-sizing:border-box; }
 
     body{
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:#222;
-      color:var(--texto);
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1000px 500px at 12% -10%, #ffffff 0%, transparent 55%),
+        linear-gradient(180deg,#eef1f5 0%, #e6e9ef 100%);
+      background-attachment:fixed;
+      color:var(--tinta);
+      -webkit-font-smoothing:antialiased;
     }
 
-    header{
-      background:var(--rojo);
-      color:#fff;
-      padding:10px 16px;
-      text-align:center;
-      text-transform:uppercase;
-      font-weight:700;
-      letter-spacing:0.05em;
+    /* ---------- topbar ---------- */
+    .topbar{
+      background:linear-gradient(135deg,#16191d 0%, #23272c 100%);
+      border-bottom:3px solid var(--rojo);
+      box-shadow:var(--sombra-md);
+      position:sticky;
+      top:0;
+      z-index:10;
     }
 
-    main{
-      max-width:1100px;
+    .topbar-inner{
+      max-width:1180px;
       margin:0 auto;
-      padding:16px;
+      padding:14px 20px;
     }
 
-    h2{
-      margin-top:0;
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .brand-logo{
+      height:46px;
+      width:auto;
+      background:#fff;
+      border-radius:10px;
+      padding:4px;
+      box-shadow:var(--sombra-sm);
+      flex:none;
+    }
+
+    .brand-text h1{
+      margin:0;
+      font-size:1.1rem;
+      font-weight:800;
+      letter-spacing:.03em;
+      color:#fff;
       text-transform:uppercase;
-      font-size:1rem;
-      letter-spacing:0.05em;
-      color:var(--rojo);
+    }
+
+    .brand-text p{
+      margin:2px 0 0;
+      font-size:.78rem;
+      color:#b7bcc4;
+      letter-spacing:.02em;
+    }
+
+    /* ---------- layout ---------- */
+    main{
+      max-width:1180px;
+      margin:0 auto;
+      padding:24px 20px 8px;
     }
 
     .grid{
       display:grid;
       grid-template-columns: minmax(0,1fr);
-      gap:16px;
+      gap:20px;
     }
 
-    @media (min-width: 900px){
+    @media (min-width: 960px){
       .grid{
-        grid-template-columns: 1.1fr 1fr;
+        grid-template-columns: 1.05fr 1fr;
+        align-items:start;
       }
     }
 
+    /* ---------- cards ---------- */
     .card{
-      background:#fff;
+      background:var(--superficie);
       border:1px solid var(--borde);
-      border-radius:6px;
-      padding:14px 16px;
-      box-shadow:0 2px 4px rgba(0,0,0,0.03);
+      border-radius:var(--radio-lg);
+      padding:22px 22px 20px;
+      box-shadow:var(--sombra-card);
+      position:relative;
+      overflow:hidden;
     }
 
+    .card::before{
+      content:"";
+      position:absolute;
+      left:0; top:0; right:0; height:4px;
+      background:linear-gradient(90deg,var(--rojo),#ff5b4a);
+    }
+
+    .card-ranking::before{
+      background:linear-gradient(90deg,var(--tinta),#5b6270);
+    }
+
+    .card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .card-head-title{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+
+    .card-icon{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:34px; height:34px;
+      border-radius:9px;
+      background:var(--rojo-claro);
+      color:var(--rojo);
+      flex:none;
+    }
+
+    .card-ranking .card-icon{
+      background:var(--superficie-alt);
+      color:var(--tinta);
+    }
+
+    .card-icon svg{ width:18px; height:18px; }
+
+    h2{
+      margin:0;
+      font-size:1rem;
+      font-weight:700;
+      letter-spacing:.01em;
+      color:var(--tinta);
+    }
+
+    .card-sub{
+      margin:2px 0 0;
+      font-size:.78rem;
+      color:var(--tinta-suave);
+    }
+
+    /* ---------- form ---------- */
     label{
       display:block;
-      font-size:0.8rem;
-      margin-bottom:4px;
+      font-size:.74rem;
+      margin-bottom:5px;
       text-transform:uppercase;
-      letter-spacing:0.05em;
-      color:#555;
+      letter-spacing:.05em;
+      font-weight:600;
+      color:var(--tinta-suave);
     }
 
     select,
     input[type="date"],
     input[type="number"]{
       width:100%;
-      padding:6px 8px;
-      border-radius:4px;
-      border:1px solid var(--borde);
-      font-size:0.9rem;
+      padding:9px 11px;
+      border-radius:var(--radio-md);
+      border:1px solid var(--borde-fuerte);
+      background:var(--superficie-alt);
+      color:var(--tinta);
+      font-size:.9rem;
+      font-family:inherit;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+
+    select:hover, input:hover{ border-color:#9aa0a8; }
+
+    select:focus, input:focus{
+      outline:none;
+      border-color:var(--rojo);
+      background:#fff;
+      box-shadow:0 0 0 3px rgba(226,0,26,.12);
     }
 
     .fila-form{
       display:grid;
       grid-template-columns: repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:10px;
+      gap:12px;
+      margin-bottom:12px;
     }
 
     .acciones-form{
@@ -100,71 +225,107 @@
       gap:10px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top:4px;
+      margin-top:6px;
     }
 
     .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
       border:none;
-      border-radius:4px;
-      padding:8px 14px;
-      font-size:0.9rem;
+      border-radius:var(--radio-md);
+      padding:10px 18px;
+      font-size:.82rem;
+      font-family:inherit;
       cursor:pointer;
       text-transform:uppercase;
-      letter-spacing:0.06em;
-      font-weight:600;
+      letter-spacing:.05em;
+      font-weight:700;
+      transition:transform .12s, box-shadow .12s, background .15s, filter .15s, border-color .15s;
     }
+
+    .btn svg{ width:15px; height:15px; flex:none; }
 
     .btn-primario{
-      background:var(--rojo);
+      background:linear-gradient(135deg,var(--rojo),var(--rojo-oscuro));
       color:#fff;
+      box-shadow:0 6px 14px -6px rgba(226,0,26,.55);
     }
+
+    .btn-primario:hover{ filter:brightness(1.06); }
 
     .btn-secundario{
-      background:#666;
-      color:#fff;
+      background:var(--superficie-alt);
+      color:var(--tinta-suave);
+      border:1px solid var(--borde-fuerte);
     }
+
+    .btn-secundario:hover{ background:#eceef1; color:var(--tinta); }
+
+    .btn-outline{
+      background:#fff;
+      color:var(--tinta);
+      border:1px solid var(--borde-fuerte);
+    }
+
+    .btn-outline:hover{ border-color:var(--tinta); }
+
+    .btn-sm{ padding:7px 13px; font-size:.72rem; }
 
     .btn-primario:active,
-    .btn-secundario:active{
-      transform:translateY(1px);
-    }
+    .btn-secundario:active,
+    .btn-outline:active{ transform:translateY(1px); }
 
     .msg{
-      font-size:0.8rem;
-      margin-top:6px;
-      min-height:1em;
+      font-size:.8rem;
+      font-weight:600;
+      margin-top:10px;
+      min-height:1.1em;
     }
 
     .msg-ok{ color:var(--verde); }
     .msg-err{ color:var(--rojo); }
 
+    /* ---------- tables ---------- */
     table{
       width:100%;
-      border-collapse:collapse;
-      font-size:0.85rem;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:.83rem;
       margin-top:6px;
     }
 
     th, td{
-      border:1px solid var(--borde);
-      padding:4px 6px;
+      padding:9px 10px;
       text-align:center;
       white-space:nowrap;
     }
 
     th{
-      background:var(--gris);
+      background:var(--superficie-alt);
+      color:var(--tinta-suave);
       text-transform:uppercase;
-      font-size:0.75rem;
-      letter-spacing:0.06em;
+      font-size:.68rem;
+      font-weight:700;
+      letter-spacing:.06em;
+      border-bottom:1px solid var(--borde);
     }
 
+    td{ border-bottom:1px solid var(--borde); }
+
+    tbody tr:last-child td{ border-bottom:none; }
+    tbody tr:hover td{ background:#fafbfc; }
+
     .tag-linea{
-      display:inline-block;
-      padding:1px 6px;
+      display:inline-flex;
+      align-items:center;
+      padding:4px 12px;
       border-radius:999px;
-      font-size:0.7rem;
-      background:var(--gris);
+      font-size:.72rem;
+      font-weight:800;
+      letter-spacing:.05em;
+      background:var(--tinta);
+      color:#fff;
       text-transform:uppercase;
     }
 
@@ -173,101 +334,185 @@
       justify-content:space-between;
       align-items:center;
       gap:8px;
-      margin-bottom:4px;
+      margin-bottom:8px;
     }
 
     .rank-title span{
-      font-size:0.75rem;
-      color:#888;
+      font-size:.74rem;
+      color:var(--tinta-suave);
+      font-weight:600;
     }
 
-    .row-best{ background:var(--verde-claro); }
-    .row-worst{ background:var(--rojo-claro); }
+    .rank-block + .rank-block{
+      margin-top:18px;
+      padding-top:18px;
+      border-top:1px solid var(--borde);
+    }
+
+    .row-best td{ background:var(--verde-claro); }
+    .row-worst td{ background:var(--rojo-claro); }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:3px 10px;
+      border-radius:999px;
+      font-size:.65rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .chip-best{ background:var(--verde); color:#fff; }
+    .chip-worst{ background:var(--rojo); color:#fff; }
 
     .empty{
-      font-size:0.8rem;
-      color:#888;
-      margin-top:6px;
+      font-size:.8rem;
+      color:var(--tinta-suave);
+      margin-top:8px;
+      padding:12px;
+      background:var(--superficie-alt);
+      border-radius:var(--radio-md);
+      text-align:center;
     }
 
     .tabla-mini thead th{
       position:sticky;
       top:0;
-      background:#fafafa;
+      background:#f7f8fa;
+      z-index:1;
     }
 
     .scroll-x{
-      max-height:210px;
+      margin-top:8px;
+      max-height:230px;
       overflow:auto;
       border:1px solid var(--borde);
-      border-radius:4px;
+      border-radius:var(--radio-md);
     }
 
     .btn-eliminar{
-      background:#e10600;
-      color:#fff;
-      border:none;
-      padding:2px 4px;
-      border-radius:3px;
+      background:transparent;
+      color:var(--rojo);
+      border:1px solid var(--rojo-claro);
+      width:24px;
+      height:24px;
+      border-radius:6px;
       cursor:pointer;
-      font-size:0.6rem;
+      font-size:.68rem;
+      font-weight:800;
+      line-height:1;
+      transition:background .15s, color .15s;
     }
-    .btn-eliminar:hover{ background:#b50000; }
+
+    .btn-eliminar:hover{ background:var(--rojo); color:#fff; }
 
     .ultimos-top{
       display:flex;
       gap:10px;
       align-items:center;
       justify-content:space-between;
-      margin-top:10px;
+      margin-top:22px;
+      padding-top:16px;
+      border-top:1px dashed var(--borde);
       margin-bottom:6px;
       flex-wrap:wrap;
     }
+
     .ultimos-top .left{
       display:flex;
-      gap:8px;
+      gap:10px;
       align-items:center;
       flex-wrap:wrap;
     }
-    .ultimos-top .stats{
-      font-size:0.75rem;
-      color:#666;
+
+    .ultimos-top .left h3{
+      margin:0;
+      font-size:.85rem;
+      font-weight:700;
+      color:var(--tinta);
+      text-transform:uppercase;
+      letter-spacing:.03em;
     }
+
+    .ultimos-top .stats{
+      font-size:.72rem;
+      color:var(--tinta-suave);
+      background:var(--superficie-alt);
+      padding:5px 11px;
+      border-radius:999px;
+      font-weight:600;
+    }
+
     .sel-mini{
       width:auto;
-      padding:4px 8px;
-      font-size:0.85rem;
+      padding:5px 9px;
+      border-radius:8px;
+      font-size:.82rem;
+    }
+
+    /* ---------- footer ---------- */
+    .footer{
+      max-width:1180px;
+      margin:8px auto 0;
+      padding:18px 20px 34px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      color:#8b93a1;
+      font-size:.75rem;
+    }
+
+    .footer-logo{
+      height:32px;
+      width:auto;
+      opacity:.85;
+      flex:none;
     }
   </style>
 </head>
 <body>
 
-<header>
-  INDICADORES · RANKING DE TURNOS
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="imagenes/Imagen2.png" alt="Monte Grande" class="brand-logo">
+      <div class="brand-text">
+        <h1>Indicadores</h1>
+        <p>Ranking de eficiencia por turno</p>
+      </div>
+    </div>
+  </div>
 </header>
 
 <main class="grid">
 
-  <section class="card">
-    <h2>Carga diaria de eficiencia</h2>
+  <section class="card card-carga">
+    <div class="card-head">
+      <div class="card-head-title">
+        <span class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M12 11v6M9 14h6"></path></svg>
+        </span>
+        <div>
+          <h2>Carga diaria de eficiencia</h2>
+          <p class="card-sub">Registrá el % de eficiencia por línea y turno</p>
+        </div>
+      </div>
+    </div>
 
     <form id="formCarga">
       <div class="fila-form">
         <div>
           <label for="linea">Línea</label>
           <select id="linea" required>
-            <option value="1">Línea 1 (4 turnos)</option>
-            <option value="2">Línea 2 (4 turnos)</option>
+            <option value="3">Línea 3 (3 turnos)</option>
+            <option value="7">Línea 7 (2 turnos)</option>
           </select>
         </div>
         <div>
           <label for="turno">Turno</label>
-          <select id="turno" required>
-            <option value="A">Turno A</option>
-            <option value="B">Turno B</option>
-            <option value="C">Turno C</option>
-            <option value="D">Turno D</option>
-          </select>
+          <select id="turno" required></select>
         </div>
       </div>
 
@@ -283,8 +528,14 @@
       </div>
 
       <div class="acciones-form">
-        <button type="submit" class="btn btn-primario">Guardar</button>
-        <button type="button" id="btnResetTodo" class="btn btn-secundario">Reiniciar todo</button>
+        <button type="submit" class="btn btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Guardar
+        </button>
+        <button type="button" id="btnResetTodo" class="btn btn-secundario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path></svg>
+          Reiniciar todo
+        </button>
       </div>
 
       <div id="msg" class="msg"></div>
@@ -292,9 +543,9 @@
 
     <div class="ultimos-top">
       <div class="left">
-        <h3 style="margin:0;font-size:0.9rem;">Últimas cargas</h3>
+        <h3>Últimas cargas</h3>
 
-        <label for="verUltimos" style="margin:0;font-size:0.7rem;color:#666;">Ver</label>
+        <label for="verUltimos" style="margin:0;font-size:.68rem;color:var(--tinta-suave);">Ver</label>
         <select id="verUltimos" class="sel-mini" title="Cantidad de registros a mostrar">
           <option value="20" selected>20</option>
           <option value="50">50</option>
@@ -322,66 +573,82 @@
     </div>
   </section>
 
-  <section class="card">
-    <h2>Ranking de turnos</h2>
+  <section class="card card-ranking">
+    <div class="card-head">
+      <div class="card-head-title">
+        <span class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"></path><path d="M7 6H4a2 2 0 0 0 2 4h1M17 6h3a2 2 0 0 1-2 4h-1"></path></svg>
+        </span>
+        <div>
+          <h2>Ranking de turnos</h2>
+          <p class="card-sub">Comparativa de desempeño por línea</p>
+        </div>
+      </div>
 
-    <div class="rank-title">
-      <div class="tag-linea">Línea 1</div>
-      <span>Turnos A · B · C · D</span>
+      <button id="btnPDF" class="btn btn-outline btn-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>
+        Generar PDF
+      </button>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Turno</th>
-          <th>Promedio %</th>
-          <th>Cargas</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyRankL1"></tbody>
-    </table>
-    <div id="emptyL1" class="empty" style="display:none;">Sin datos aún para Línea 1.</div>
 
-    <hr style="margin:14px 0;border:none;border-top:1px solid var(--borde);">
-
-    <div class="rank-title">
-      <div class="tag-linea">Línea 2</div>
-      <span>Turnos A · B · C · D</span>
+    <div class="rank-block">
+      <div class="rank-title">
+        <div class="tag-linea">Línea 3</div>
+        <span>Turnos A · B · C</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Turno</th>
+            <th>Promedio %</th>
+            <th>Cargas</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyRankL1"></tbody>
+      </table>
+      <div id="emptyL1" class="empty" style="display:none;">Sin datos aún para Línea 3.</div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Turno</th>
-          <th>Promedio %</th>
-          <th>Cargas</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyRankL2"></tbody>
-    </table>
-    <div id="emptyL2" class="empty" style="display:none;">Sin datos aún para Línea 2.</div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
-      <button id="btnPDF" class="btn btn-primario">Generar PDF</button>
-
-      <img src="imagenes/Imagen2.png"
-           alt="logo"
-           style="height:90px; width:auto; transform:translateX(-10px);">
+    <div class="rank-block">
+      <div class="rank-title">
+        <div class="tag-linea">Línea 7</div>
+        <span>Turnos A · B</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Turno</th>
+            <th>Promedio %</th>
+            <th>Cargas</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyRankL2"></tbody>
+      </table>
+      <div id="emptyL2" class="empty" style="display:none;">Sin datos aún para Línea 7.</div>
     </div>
   </section>
 
 </main>
+
+<footer class="footer">
+  <img src="imagenes/Imagen2.png" alt="Monte Grande" class="footer-logo">
+  <span>Monte Grande · Sistema interno de indicadores</span>
+</footer>
 
 <div id="pdfArea" style="position:absolute; left:-9999px; top:0; width:800px; padding:20px; background:#fff;">
   <h2 style="text-align:center; margin-bottom:10px;">Informe de Indicadores – Eficiencia por Turno</h2>
   <div id="pdfFecha" style="font-size:0.9rem; margin-bottom:14px; text-align:center;"></div>
 
   <div id="pdfCardL1" style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:14px;">
-    <h3 style="margin:0 0 6px 0;">Línea 1 – Turnos A, B, C, D</h3>
+    <h3 style="margin:0 0 6px 0;">Línea 3 – Turnos A, B, C</h3>
     <div style="font-size:0.8rem;color:#666;margin-bottom:8px;">Evolución diaria de eficiencia (%)</div>
     <canvas id="chartL1" width="760" height="260"></canvas>
   </div>
 
   <div id="pdfCardL2" style="border:1px solid #ddd; border-radius:8px; padding:12px;">
-    <h3 style="margin:0 0 6px 0;">Línea 2 – Turnos A, B, C, D</h3>
+    <h3 style="margin:0 0 6px 0;">Línea 7 – Turnos A, B</h3>
     <div style="font-size:0.8rem;color:#666;margin-bottom:8px;">Evolución diaria de eficiencia (%)</div>
     <canvas id="chartL2" width="760" height="260"></canvas>
   </div>
@@ -467,12 +734,13 @@
     return out;
   }
 
-  function obtenerTurnosPorLinea(){
-    return ["A","B","C","D"];
+  function obtenerTurnosPorLinea(linea){
+    if(Number(linea) === 7) return ["A","B"];
+    return ["A","B","C"];
   }
 
   function prepararSeriesPorLinea(linea){
-    const turnos = obtenerTurnosPorLinea();
+    const turnos = obtenerTurnosPorLinea(linea);
     const regs = registros
       .filter(r => r.linea === linea && r.fecha)
       .map(r => ({ ...r, fecha: String(r.fecha) }));
@@ -636,7 +904,7 @@
   }
 
   function calcularRanking(linea){
-    const turnos = obtenerTurnosPorLinea();
+    const turnos = obtenerTurnosPorLinea(linea);
 
     const datos = turnos.map(t => {
       const filtrados = registros.filter(r => r.linea === linea && r.turno === t);
@@ -658,43 +926,39 @@
     return { datos, mejorTurno: mejor?.turno || null, peorTurno: peor?.turno || null };
   }
 
-  function renderRanking(){
-    const rank1 = calcularRanking(1);
-    const tbody1 = $("#tbodyRankL1");
-    tbody1.innerHTML = "";
+  function chipEstado(d, mejorTurno, peorTurno){
+    if(d.cant === 0) return "";
+    if(d.turno === mejorTurno) return `<span class="chip chip-best">Mejor</span>`;
+    if(mejorTurno !== peorTurno && d.turno === peorTurno) return `<span class="chip chip-worst">A mejorar</span>`;
+    return "";
+  }
 
-    rank1.datos.forEach(d => {
+  function renderTablaRanking(tbodyId, rank){
+    const tbody = $(tbodyId);
+    tbody.innerHTML = "";
+
+    rank.datos.forEach(d => {
       const tr = document.createElement("tr");
-      if(d.turno === rank1.mejorTurno) tr.classList.add("row-best");
-      if(d.turno === rank1.peorTurno)  tr.classList.add("row-worst");
+      if(d.turno === rank.mejorTurno) tr.classList.add("row-best");
+      if(rank.mejorTurno !== rank.peorTurno && d.turno === rank.peorTurno) tr.classList.add("row-worst");
 
       tr.innerHTML = `
         <td>${d.turno}</td>
         <td>${d.prom !== null ? formatearNumero(d.prom) + "%" : "-"}</td>
         <td>${d.cant}</td>
+        <td>${chipEstado(d, rank.mejorTurno, rank.peorTurno)}</td>
       `;
-      tbody1.appendChild(tr);
+      tbody.appendChild(tr);
     });
+  }
 
+  function renderRanking(){
+    const rank1 = calcularRanking(3);
+    renderTablaRanking("#tbodyRankL1", rank1);
     $("#emptyL1").style.display = rank1.mejorTurno === null ? "block" : "none";
 
-    const rank2 = calcularRanking(2);
-    const tbody2 = $("#tbodyRankL2");
-    tbody2.innerHTML = "";
-
-    rank2.datos.forEach(d => {
-      const tr = document.createElement("tr");
-      if(d.turno === rank2.mejorTurno) tr.classList.add("row-best");
-      if(d.turno === rank2.peorTurno)  tr.classList.add("row-worst");
-
-      tr.innerHTML = `
-        <td>${d.turno}</td>
-        <td>${d.prom !== null ? formatearNumero(d.prom) + "%" : "-"}</td>
-        <td>${d.cant}</td>
-      `;
-      tbody2.appendChild(tr);
-    });
-
+    const rank2 = calcularRanking(7);
+    renderTablaRanking("#tbodyRankL2", rank2);
     $("#emptyL2").style.display = rank2.mejorTurno === null ? "block" : "none";
   }
 
@@ -710,6 +974,13 @@
     const off = new Date(ahora.getTime() - ahora.getTimezoneOffset()*60000);
     inpFecha.value = off.toISOString().slice(0,10);
   })();
+
+  function actualizarTurnosSelect(){
+    const turnos = obtenerTurnosPorLinea(selLinea.value);
+    selTurno.innerHTML = turnos.map(t => `<option value="${t}">Turno ${t}</option>`).join("");
+  }
+  selLinea.addEventListener("change", actualizarTurnosSelect);
+  actualizarTurnosSelect();
 
   $("#verUltimos").addEventListener("change", () => renderUltimos());
   $("#btnResetTodo").addEventListener("click", reiniciarTodo);
@@ -754,8 +1025,8 @@
 
     destruirChartsPDF();
 
-    _chartPdfL1 = crearLineChart("chartL1", "Línea 1", 1);
-    _chartPdfL2 = crearLineChart("chartL2", "Línea 2", 2);
+    _chartPdfL1 = crearLineChart("chartL1", "Línea 3", 3);
+    _chartPdfL2 = crearLineChart("chartL2", "Línea 7", 7);
 
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
